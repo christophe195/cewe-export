@@ -728,52 +728,6 @@ function rasterizeSvg(svgBytes, shadow, cutoutScale) {
 
 /**
  * Rasteriseer een JPEG/PNG foto naar de exacte framegrootte op het gekozen DPI.
- * - Verwerkt de cutout (crop + schaal) op de canvas.
- * - Uitvoer is een PNG Uint8Array (pre-gecropped, klaar voor inbedden).
- * - pxPerPt = dpi / 72
- */
-async function rasterizeImageToFrame(rawData, ext, aW_pt, aH_pt, cutout, pxPerPt) {
-  const mimeType = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : 'image/png';
-  const blob     = new Blob([rawData], { type: mimeType });
-  const url      = URL.createObjectURL(blob);
-
-  const img = await new Promise((res, rej) => {
-    const i = new Image();
-    i.onload  = () => { URL.revokeObjectURL(url); res(i); };
-    i.onerror = ()  => { URL.revokeObjectURL(url); rej(new Error('img load')); };
-    i.src = url;
-  });
-
-  const canvasW = Math.max(1, Math.round(aW_pt * pxPerPt));
-  const canvasH = Math.max(1, Math.round(aH_pt * pxPerPt));
-
-  // Beeldgrootte na cutout-schaal
-  let imgW_px, imgH_px;
-  if (cutout && cutout.scale > 0) {
-    imgW_px = img.naturalWidth  * cutout.scale * PT_PER_UNIT * pxPerPt;
-    imgH_px = img.naturalHeight * cutout.scale * PT_PER_UNIT * pxPerPt;
-  } else {
-    const coverScale = Math.max(canvasW / img.naturalWidth, canvasH / img.naturalHeight);
-    imgW_px = img.naturalWidth  * coverScale;
-    imgH_px = img.naturalHeight * coverScale;
-  }
-
-  // Cutout-offset (in canvas-pixels, Y naar beneden)
-  const drawX = (cutout?.left ?? 0) * PT_PER_UNIT * pxPerPt;
-  const drawY = (cutout?.top  ?? 0) * PT_PER_UNIT * pxPerPt;
-
-  const canvas = new OffscreenCanvas(canvasW, canvasH);
-  canvas.getContext('2d').drawImage(img, drawX, drawY, imgW_px, imgH_px);
-
-  // JPEG source → JPEG uitvoer (vermijdt PNG-overhead voor foto's)
-  // PNG source → PNG uitvoer (behoudt transparantie)
-  const outType = mimeType;
-  const outBlob = await canvas.convertToBlob({ type: outType, quality: 0.97 });
-  return new Uint8Array(await outBlob.arrayBuffer());
-}
-
-/**
- * Rasteriseer een JPEG/PNG foto naar de exacte framegrootte op het gekozen DPI.
  * - Respecteert de cutout (crop + schaal).
  * - Samplet nooit hoger dan de native pixelresolutie van de bronafbeelding.
  * - pdfImgQuality: 'png' = lossless PNG, getal = JPEG quality (0-1)
