@@ -24,7 +24,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
-        100% local — no data sent
+        Your photo book never leaves your device
       </div>
       <button class="btn btn-secondary" id="btn-new" style="display:none">Open another file</button>
       <button class="btn btn-secondary" id="btn-clear-cache" style="display:none" title="Remove cached files">🗑 Clear cache</button>
@@ -141,9 +141,23 @@
   </div>
 
   <footer>
-    &copy; 2026 Christophe Van Dooren &mdash; All processing happens locally in your browser. No files are sent to a server.
+    &copy; 2026 Christophe Van Dooren &mdash; Your photo book file is processed entirely in your browser and is never uploaded to any server.
   </footer>
 
   <script type="module" src="app.js"></script>
+
+  <!-- Matomo Analytics (page views only, no file data) -->
+  <script>
+    var _paq = window._paq = window._paq || [];
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function() {
+      var u = 'https://YOUR_MATOMO_URL/';
+      _paq.push(['setTrackerUrl', u + 'matomo.php']);
+      _paq.push(['setSiteId', 'YOUR_SITE_ID']);
+      var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+      g.async = true; g.src = u + 'matomo.js'; s.parentNode.insertBefore(g, s);
+    })();
+  </script>
 </body>
 </html>
