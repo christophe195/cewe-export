@@ -910,70 +910,39 @@ async function buildPdf(parsed, mode, pdfImgQuality, onProgress, onElemProgress)
       ]});
     }
   } else {
-    // Boek-volgorde: voorkant → inhoud → achterkant
-    // Eerste fullcover: links = achtercover, rechts = voorcover.
+    // 'paged' and 'page' modes share the same logic as booklet,
+    // except the fullcover is split: right half (front) first, left half (back) last.
     const mainCover  = pages.find(p => p.type === 'fullcover');
     const normalPages = pages.filter(p =>
       p.type === 'normalpage' && (!skipEmpty || hasUserContent(p))
     );
 
+    // ── Front cover (right half of fullcover) ──────────────────────────────
     if (mainCover) {
       const fullW_pt = mainCover.bundlesize.width  * PT_PER_UNIT;
       const halfW_pt = fullW_pt / 2;
       const H_pt     = mainCover.bundlesize.height * PT_PER_UNIT;
-
-      if (mode === 'paged') {
-        // Cover als volledige spread: links = achtercover, rechts = voorcover
-        renderQueue.push({ pdfW: fullW_pt, pdfH: H_pt, layers: [
-          // Linker helft (achtercover): LEFT_OR_TOP areas, geen verschuiving
-          { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: 0,        clipX_pt: 0,        clipW_pt: halfW_pt },
-          // Rechter helft (voorcover): RIGHT_OR_BOTTOM areas, xShift -halfW zodat ze op halfW terechtkomen
-          { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: 0,        clipX_pt: halfW_pt, clipW_pt: halfW_pt },
-        ]});
-      } else {
-        // 'page' mode: voorcover als aparte pagina
-        renderQueue.push({ pdfW: halfW_pt, pdfH: H_pt, layers: [
-          { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: -halfW_pt, clipX_pt: 0, clipW_pt: halfW_pt }
-        ]});
-      }
+      // xShift = -halfW_pt shifts RIGHT_OR_BOTTOM areas left by halfW so they start at x=0
+      renderQueue.push({ pdfW: halfW_pt, pdfH: H_pt, layers: [
+        { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: -halfW_pt, clipX_pt: 0, clipW_pt: halfW_pt }
+      ]});
     }
 
-    if (mode === 'paged') {
-      // Normal pages 2-up on one PDF page
-      for (let i = 0; i < normalPages.length; i += 2) {
-        const left  = normalPages[i];
-        const right = normalPages[i + 1];
-        if (right) {
-          const lW = left.bundlesize.width   * PT_PER_UNIT;
-          const rW = right.bundlesize.width  * PT_PER_UNIT;
-          const pH = Math.max(left.bundlesize.height, right.bundlesize.height) * PT_PER_UNIT;
-          renderQueue.push({ pdfW: lW + rW, pdfH: pH, layers: [
-            { page: left,  fullPW_pt: lW, xShift_pt: 0,  clipX_pt: 0,  clipW_pt: lW },
-            { page: right, fullPW_pt: rW, xShift_pt: lW, clipX_pt: lW, clipW_pt: rW },
-          ]});
-        } else {
-          const pW = left.bundlesize.width  * PT_PER_UNIT;
-          const pH = left.bundlesize.height * PT_PER_UNIT;
-          renderQueue.push({ pdfW: pW, pdfH: pH, layers: [
-            { page: left, fullPW_pt: pW, xShift_pt: 0, clipX_pt: 0, clipW_pt: pW }
-          ]});
-        }
-      }
-    } else { // 'page' mode: each MCFX page → one PDF page
-      for (const p of normalPages) {
-        const pW = p.bundlesize.width  * PT_PER_UNIT;
-        const pH = p.bundlesize.height * PT_PER_UNIT;
-        renderQueue.push({ pdfW: pW, pdfH: pH, layers: [
-          { page: p, fullPW_pt: pW, xShift_pt: 0, clipX_pt: 0, clipW_pt: pW }
-        ]});
-      }
+    // ── Normal pages — one per PDF page (same as booklet) ─────────────────
+    for (const p of normalPages) {
+      const pW = p.bundlesize.width  * PT_PER_UNIT;
+      const pH = p.bundlesize.height * PT_PER_UNIT;
+      renderQueue.push({ pdfW: pW, pdfH: pH, layers: [
+        { page: p, fullPW_pt: pW, xShift_pt: 0, clipX_pt: 0, clipW_pt: pW }
+      ]});
     }
 
-    if (mainCover && mode !== 'paged') {
+    // ── Back cover (left half of fullcover) ───────────────────────────────
+    if (mainCover) {
       const fullW_pt = mainCover.bundlesize.width  * PT_PER_UNIT;
       const halfW_pt = fullW_pt / 2;
       const H_pt     = mainCover.bundlesize.height * PT_PER_UNIT;
-      // 'page' mode: back cover as separate page
+      // No xShift: LEFT_OR_TOP areas are already at x=0, clip to left half only
       renderQueue.push({ pdfW: halfW_pt, pdfH: H_pt, layers: [
         { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: 0, clipX_pt: 0, clipW_pt: halfW_pt }
       ]});
