@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# CEWE photo book files — can be large (hundreds of MB)
+*.mcfx
+
+# Editor
+.vscode/

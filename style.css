@@ -1,0 +1,251 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────── */
+header {
+  padding: 0.75rem 1.5rem;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+header h1 { font-size: 1.1rem; font-weight: 600; color: #e94560; }
+header p  { font-size: 0.8rem; color: #888; }
+
+.header-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+/* ── Buttons ─────────────────────────────────── */
+.btn {
+  border: none;
+  padding: 0.5rem 1.1rem;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary { background: #e94560; color: #fff; }
+.btn-primary:hover { background: #c73652; }
+.btn-secondary { background: #0f3460; color: #e0e0e0; }
+.btn-secondary:hover { background: #1a4a80; }
+.btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Drop zone ───────────────────────────────── */
+#section-drop {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+#drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border: 2px dashed #0f3460;
+  padding: 3rem 4rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+}
+
+#drop-zone.drag-over {
+  border-color: #e94560;
+  background: rgba(233, 69, 96, 0.06);
+}
+
+#drop-zone svg { width: 56px; height: 56px; color: #0f3460; }
+#drop-zone p   { font-size: 0.95rem; color: #888; }
+#drop-zone strong { color: #e94560; }
+
+#file-input { display: none; }
+#drop-status { font-size: 0.82rem; color: #e94560; min-height: 1.2em; }
+
+/* ── After load: info + actions ─────────────── */
+#section-loaded {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#loaded-top {
+  padding: 1rem 1.5rem;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-shrink: 0;
+}
+
+#info-table { border-collapse: collapse; font-size: 0.82rem; }
+#info-table td { padding: 0.18rem 0.6rem; }
+#info-table td:first-child { color: #888; width: 140px; }
+
+#loaded-actions { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end; }
+
+/* ── Progress ────────────────────────────────── */
+#progress-wrap {
+  display: none;
+  padding: 0.5rem 1.5rem 0.6rem;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+  flex-shrink: 0;
+}
+
+.progress-row { margin-bottom: 0.35rem; }
+.progress-row:last-child { margin-bottom: 0; }
+
+.progress-label-line {
+  font-size: 0.78rem;
+  color: #aaa;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progress-track {
+  height: 4px;
+  background: #0f3460;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  transition: width 0.08s linear;
+}
+
+#progress-fill-page { background: #e94560; }
+#progress-fill-elem { background: #4a7fc1; }
+
+/* ── PDF viewer ──────────────────────────────── */
+#section-viewer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background: #111827;
+}
+
+#section-viewer canvas {
+  display: block;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  border-radius: 2px;
+  max-width: 100%;
+}
+
+#viewer-placeholder {
+  color: #444;
+  font-size: 0.9rem;
+  margin-top: 4rem;
+}
+  </style>
+</head>
+<body>
+
+  <header>
+<div>
+  <h1>CEWE MCFX → PDF</h1>
+  <p>Fotoboek exporteren naar hoge kwaliteit PDF</p>
+</div>
+<div class="header-actions">
+  <button class="btn btn-secondary" id="btn-new" style="display:none">Ander bestand</button>
+  <button class="btn btn-secondary" id="btn-clear-cache" style="display:none" title="Verwijder gecachede bestanden">&#x1F5D1; Cache wissen</button>
+  <button class="btn btn-primary"   id="btn-download" style="display:none">⬇ Download PDF</button>
+
+/* ── Privacy badge ───────────────────────────────── */
+#privacy-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #4caf7d;
+  background: rgba(76, 175, 125, 0.1);
+  border: 1px solid rgba(76, 175, 125, 0.25);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  white-space: nowrap;
+}
+
+#privacy-badge svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ── Footer ──────────────────────────────────────── */
+footer {
+  flex-shrink: 0;
+  background: #16213e;
+  border-top: 1px solid #0f3460;
+  padding: 0.45rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+/* ── Controls in loaded-actions ─────────────────── */
+.ctrl-label {
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.ctrl-row {
+  display: flex;
+  gap: 0.8rem;
+  font-size: 0.82rem;
+  color: #aaa;
+  align-items: center;
+}
+
+.ctrl-title { white-space: nowrap; }
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.select-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.select-label select,
+#loaded-actions select {
+  background: #0f3460;
+  color: #e0e0e0;
+  border: none;
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.82rem;
+}

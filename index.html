@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CEWE MCFX → PDF</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- External libraries (read-only, no data upload) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>CEWE MCFX → PDF</h1>
+      <p>Export photo books to high-quality PDF or JPEG</p>
+    </div>
+    <div class="header-actions">
+      <div id="privacy-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        100% local — no data sent
+      </div>
+      <button class="btn btn-secondary" id="btn-new" style="display:none">Open another file</button>
+      <button class="btn btn-secondary" id="btn-clear-cache" style="display:none" title="Remove cached files">🗑 Clear cache</button>
+      <button class="btn btn-primary" id="btn-download" style="display:none">⬇ Download PDF</button>
+    </div>
+  </header>
+
+  <!-- Drop zone -->
+  <div id="section-drop">
+    <div id="drop-zone">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+      </svg>
+      <p>Drop a <strong>.mcfx</strong> file here</p>
+      <p style="font-size:0.8rem">— or —</p>
+      <button class="btn btn-primary" id="upload-btn">Choose file</button>
+      <input type="file" id="file-input" accept=".mcfx" />
+    </div>
+    <p id="drop-status"></p>
+  </div>
+
+  <!-- Info + actions + viewer (after load) -->
+  <div id="section-loaded">
+
+    <div id="loaded-top">
+      <table id="info-table"></table>
+      <div id="loaded-actions">
+
+        <label class="ctrl-label">
+          <input type="checkbox" id="chk-skip-empty" checked>
+          Skip empty pages
+        </label>
+
+        <div class="ctrl-row">
+          <span class="ctrl-title">Mode:</span>
+          <label class="radio-label"><input type="radio" name="render-mode" value="booklet" checked> Booklet</label>
+          <label class="radio-label"><input type="radio" name="render-mode" value="paged"> Spread</label>
+          <label class="radio-label"><input type="radio" name="render-mode" value="page"> Single page</label>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-title">Format:</span>
+          <label class="radio-label"><input type="radio" name="export-format" value="pdf" checked> PDF</label>
+          <label class="radio-label"><input type="radio" name="export-format" value="jpeg"> JPEG</label>
+        </div>
+
+        <div class="ctrl-row">
+          <label class="select-label">
+            DPI:
+            <select id="sel-dpi">
+              <option value="150">150</option>
+              <option value="300" selected>300</option>
+              <option value="600">600</option>
+              <option value="1200">1200</option>
+            </select>
+          </label>
+          <label class="select-label" id="jpeg-quality-wrap" style="display:none">
+            Quality:
+            <select id="sel-jpeg-quality">
+              <option value="0.85">85%</option>
+              <option value="0.92" selected>92%</option>
+              <option value="0.97">97%</option>
+              <option value="1.0">100%</option>
+            </select>
+          </label>
+          <label class="select-label">
+            PDF photos:
+            <select id="sel-pdf-img-quality">
+              <option value="png">PNG (lossless)</option>
+              <option value="0.97" selected>JPEG 97%</option>
+              <option value="0.92">JPEG 92%</option>
+              <option value="0.85">JPEG 85%</option>
+            </select>
+          </label>
+        </div>
+
+        <button class="btn btn-primary" id="btn-export">Export</button>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div id="progress-wrap">
+      <div class="progress-row">
+        <div class="progress-label-line" id="progress-label-page">Working…</div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill-page"></div></div>
+      </div>
+      <div class="progress-row">
+        <div class="progress-label-line" id="progress-label-elem">&nbsp;</div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill-elem"></div></div>
+      </div>
+    </div>
+
+    <!-- PDF preview -->
+    <div id="section-viewer">
+      <p id="viewer-placeholder">Click "Export" to generate a preview.</p>
+    </div>
+
+  </div>
+
+  <footer>
+    &copy; 2026 Christophe Van Dooren &mdash; All processing happens locally in your browser. No files are sent to a server.
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
