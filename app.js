@@ -917,14 +917,19 @@ async function buildPdf(parsed, mode, pdfImgQuality, onProgress, onElemProgress)
       p.type === 'normalpage' && (!skipEmpty || hasUserContent(p))
     );
 
-    // ── Front cover (right half of fullcover) ──────────────────────────────
+    // ── Front cover (right half of fullcover, clipped to single page width) ──
     if (mainCover) {
       const fullW_pt = mainCover.bundlesize.width  * PT_PER_UNIT;
       const halfW_pt = fullW_pt / 2;
       const H_pt     = mainCover.bundlesize.height * PT_PER_UNIT;
-      // xShift = -halfW_pt shifts RIGHT_OR_BOTTOM areas left by halfW so they start at x=0
-      renderQueue.push({ pdfW: halfW_pt, pdfH: H_pt, layers: [
-        { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: -halfW_pt, clipX_pt: 0, clipW_pt: halfW_pt }
+      // Single page width = normalpage spread / 2 (strips the spine).
+      const singlePageW_pt = normalPages.length > 0
+        ? (normalPages[0].bundlesize.width / 2) * PT_PER_UNIT
+        : halfW_pt;
+      // xShift=-halfW: RIGHT_OR_BOTTOM areas (bgOffsetX=halfW) land at x=0.
+      // Spine is at negative x → clipped away by [0, singlePageW].
+      renderQueue.push({ pdfW: singlePageW_pt, pdfH: H_pt, layers: [
+        { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: -halfW_pt, clipX_pt: 0, clipW_pt: singlePageW_pt }
       ]});
     }
 
@@ -937,14 +942,16 @@ async function buildPdf(parsed, mode, pdfImgQuality, onProgress, onElemProgress)
       ]});
     }
 
-    // ── Back cover (left half of fullcover) ───────────────────────────────
+    // ── Back cover (left half of fullcover, clipped to single page width) ───
     if (mainCover) {
       const fullW_pt = mainCover.bundlesize.width  * PT_PER_UNIT;
-      const halfW_pt = fullW_pt / 2;
       const H_pt     = mainCover.bundlesize.height * PT_PER_UNIT;
-      // No xShift: LEFT_OR_TOP areas are already at x=0, clip to left half only
-      renderQueue.push({ pdfW: halfW_pt, pdfH: H_pt, layers: [
-        { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: 0, clipX_pt: 0, clipW_pt: halfW_pt }
+      const singlePageW_pt = normalPages.length > 0
+        ? (normalPages[0].bundlesize.width / 2) * PT_PER_UNIT
+        : fullW_pt / 2;
+      // No xShift: LEFT_OR_TOP areas at x=0. Spine at x≥singlePageW → clipped away.
+      renderQueue.push({ pdfW: singlePageW_pt, pdfH: H_pt, layers: [
+        { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: 0, clipX_pt: 0, clipW_pt: singlePageW_pt }
       ]});
     }
   }
