@@ -59,7 +59,19 @@ dropZone.addEventListener('drop', e => {
   if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
 });
 
-// Toon/verberg JPEG-kwaliteitsoptie op basis van formaatkeuze
+// ─── Matomo event tracking helper ────────────────────────────────────────────
+function track(category, action, name, value) {
+  try {
+    const paq = window._paq;
+    if (!paq) return;
+    const args = ['trackEvent', category, action];
+    if (name  !== undefined) args.push(String(name));
+    if (value !== undefined) args.push(Number(value));
+    paq.push(args);
+  } catch (_) {}
+}
+
+// Show/hide JPEG quality option based on format selection
 document.querySelectorAll('input[name="export-format"]').forEach(r =>
   r.addEventListener('change', () => {
     const isJpeg = document.querySelector('input[name="export-format"]:checked')?.value === 'jpeg';
@@ -86,6 +98,11 @@ btnExport.addEventListener('click', async () => {
     const pdfImgQuality = selPdfImgQuality.value === 'png' ? 'png' : parseFloat(selPdfImgQuality.value);
 
     const pdfBytes = await buildPdf(parsedMcfx, mode, pdfImgQuality, updateProgress, updateElemProgress);
+    const pageCount = parsedMcfx.pages.filter(p => p.type === 'normalpage').length;
+    const product   = parsedMcfx.projectInfo.articleName;
+
+    // Track: export generated
+    track('Export', 'generate', `${format}|${mode}|${dpi}dpi|img:${pdfImgQuality}|${product}`, pageCount);
 
     if (format === 'jpeg') {
       setProgress('Rendering JPEG…', 100, null, 0);
@@ -94,6 +111,7 @@ btnExport.addEventListener('click', async () => {
       a.href = zipUrl;
       a.download = baseName + '_jpeg.zip';
       a.click();
+      track('Export', 'download', `jpeg|${mode}|${dpi}dpi|q:${quality}|${product}`, pageCount);
       setTimeout(() => URL.revokeObjectURL(zipUrl), 10000);
     } else {
       // Maak blob VÓÓR renderPreview: PDF.js transfert de ArrayBuffer
@@ -106,6 +124,7 @@ btnExport.addEventListener('click', async () => {
         a.href = pdfBlobUrl;
         a.download = baseName + '.pdf';
         a.click();
+        track('Export', 'download', `pdf|${mode}|${dpi}dpi|img:${pdfImgQuality}|${product}`, pageCount);
       };
       setProgress('Loading preview…', 100, null, 0);
       await renderPreview(pdfBytes);
@@ -299,6 +318,13 @@ function showLoaded(parsed, filename, cacheStatus) {
 
   const { projectInfo, pages, files } = parsed;
   const imgCount = [...files.keys()].filter(k => /\.(jpg|jpeg|png|svg)$/i.test(k)).length;
+  const normalPageCount = pages.filter(p => p.type === 'normalpage').length;
+
+  // Track book metadata (no personal data — only product/version info)
+  track('Book', 'loaded', projectInfo.articleName);
+  track('Book', 'pages',  projectInfo.articleName, normalPageCount);
+  track('Book', 'hps-version', projectInfo.hpsVersion);
+  track('Book', 'format-version', projectInfo.version);
 
   infoTable.innerHTML = '';
   const rows = [
