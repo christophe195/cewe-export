@@ -796,7 +796,44 @@ async function rasterizeImageToFrame(rawData, ext, dbKey, aW_pt, aH_pt, cutout, 
   const drawYpx  = (cutout?.top  ?? 0) * PT_PER_UNIT * pxPerPt * effScale;
 
   const canvas = new OffscreenCanvas(canvasW, canvasH);
-  canvas.getContext('2d').drawImage(img, drawXpx, drawYpx, imgW_px, imgH_px);
+  const ctx    = canvas.getContext('2d');
+
+  // For PNG sources with JPEG output: check for transparency by sampling the canvas
+  // after drawing. If any alpha < 255 is found, fall back to PNG to preserve it.
+  // For JPEG sources (no alpha channel) or PNG output: straightforward draw.
+  const wantJpeg = (pdfImgQuality !== 'png');
+  const srcIsPng = (ext === 'png');
+
+  if (wantJpeg && srcIsPng) {
+    // Draw onto a temp canvas first to inspect transparency
+    const tmp  = new OffscreenCanvas(Math.min(canvasW, 64), Math.min(canvasH, 64));
+    const tCtx = tmp.getContext('2d');
+    const sx   = canvasW / tmp.width, sy = canvasH / tmp.height;
+    tCtx.drawImage(img,
+      drawXpx / sx, drawYpx / sy,
+      imgW_px / sx, imgH_px / sy
+    );
+    const pixels  = tCtx.getImageData(0, 0, tmp.width, tmp.height).data;
+    let hasAlpha  = false;
+    for (let p = 3; p < pixels.length; p += 4) {
+      if (pixels[p] < 255) { hasAlpha = true; break; }
+    }
+
+    if (hasAlpha) {
+      // Has transparency → keep as PNG regardless of quality setting
+      ctx.drawImage(img, drawXpx, drawYpx, imgW_px, imgH_px);
+      const outBlob = await canvas.convertToBlob({ type: 'image/png' });
+      const result  = new Uint8Array(await outBlob.arrayBuffer());
+      _rasterFrameCache.set(cKey, result);
+      return result;
+    } else {
+      // Fully opaque PNG → safe to encode as JPEG; white bg as safety net
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+    }
+  }
+
+  ctx.drawImage(img, drawXpx, drawYpx, imgW_px, imgH_px);
 
   const outType    = (pdfImgQuality !== 'png') ? 'image/jpeg' : 'image/png';
   const outOptions  = outType === 'image/jpeg' ? { type: outType, quality: pdfImgQuality } : { type: outType };
@@ -1058,10 +1095,12 @@ async function buildPdf(parsed, mode, pdfImgQuality, onProgress, onElemProgress)
         .catch(e => { console.warn('Photo raster:', area.dbKey, e.message); return null; });
       if (!framePng) { tickElem(area.dbKey.split('_').pop() ?? area.dbKey); continue; }
 
-      // JPEG output → embedJpg (kleinere PDF), anders embedPng
+      // Detect actual output format from magic bytes (transparent PNGs are
+      // returned as PNG even when JPEG quality is requested).
       let pdfImg;
       try {
-        pdfImg = (pdfImgQuality !== 'png')
+        const isJpegBytes = framePng[0] === 0xFF && framePng[1] === 0xD8;
+        pdfImg = isJpegBytes
           ? await pdfDoc.embedJpg(framePng)
           : await pdfDoc.embedPng(framePng);
       } catch (_) {
