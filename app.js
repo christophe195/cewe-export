@@ -921,10 +921,21 @@ async function buildPdf(parsed, mode, pdfImgQuality, onProgress, onElemProgress)
       const fullW_pt = mainCover.bundlesize.width  * PT_PER_UNIT;
       const halfW_pt = fullW_pt / 2;
       const H_pt     = mainCover.bundlesize.height * PT_PER_UNIT;
-      // Voorcover (rechter helft): xShift = -halfW zodat RIGHT_OR_BOTTOM areas op x=0 beginnen
-      renderQueue.push({ pdfW: halfW_pt, pdfH: H_pt, layers: [
-        { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: -halfW_pt, clipX_pt: 0, clipW_pt: halfW_pt }
-      ]});
+
+      if (mode === 'paged') {
+        // Cover als volledige spread: links = achtercover, rechts = voorcover
+        renderQueue.push({ pdfW: fullW_pt, pdfH: H_pt, layers: [
+          // Linker helft (achtercover): LEFT_OR_TOP areas, geen verschuiving
+          { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: 0,        clipX_pt: 0,        clipW_pt: halfW_pt },
+          // Rechter helft (voorcover): RIGHT_OR_BOTTOM areas, xShift -halfW zodat ze op halfW terechtkomen
+          { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: 0,        clipX_pt: halfW_pt, clipW_pt: halfW_pt },
+        ]});
+      } else {
+        // 'page' mode: voorcover als aparte pagina
+        renderQueue.push({ pdfW: halfW_pt, pdfH: H_pt, layers: [
+          { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: -halfW_pt, clipX_pt: 0, clipW_pt: halfW_pt }
+        ]});
+      }
     }
 
     if (mode === 'paged') {
@@ -958,11 +969,11 @@ async function buildPdf(parsed, mode, pdfImgQuality, onProgress, onElemProgress)
       }
     }
 
-    if (mainCover) {
+    if (mainCover && mode !== 'paged') {
       const fullW_pt = mainCover.bundlesize.width  * PT_PER_UNIT;
       const halfW_pt = fullW_pt / 2;
       const H_pt     = mainCover.bundlesize.height * PT_PER_UNIT;
-      // Achtercover (linker helft): geen xShift, clip tot halfW
+      // 'page' mode: back cover as separate page
       renderQueue.push({ pdfW: halfW_pt, pdfH: H_pt, layers: [
         { page: mainCover, fullPW_pt: fullW_pt, xShift_pt: 0, clipX_pt: 0, clipW_pt: halfW_pt }
       ]});
