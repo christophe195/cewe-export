@@ -93,7 +93,7 @@ The layout XML describes pages with typed areas (`imagearea`, `textarea`, `image
 | [PDF.js](https://mozilla.github.io/pdf.js/) | PDF preview + JPEG rendering |
 | [JSZip](https://stuk.github.io/jszip/) | ZIP packaging for JPEG export |
 
-All libraries are loaded from CDN. No server-side code.
+All libraries are vendored locally in `libs/` (no runtime CDN dependency). No server-side code.
 
 ---
 

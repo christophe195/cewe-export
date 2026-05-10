@@ -39,8 +39,7 @@ const progressLabelElem = document.getElementById('progress-label-elem');
 const progressFillElem  = document.getElementById('progress-fill-elem');
 const sectionViewer = document.getElementById('section-viewer');
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdfjs/pdf.worker.min.js';
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let parsedMcfx  = null;
@@ -367,7 +366,7 @@ function setProgress(pageLabel, pagePct, elemLabel, elemPct) {
 async function parseMcfx(buffer) {
   // Laad sql.js WASM
   const SQL = await initSqlJs({
-    locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${f}`,
+    locateFile: f => `libs/sqljs/${f}`,
   });
 
   const db = new SQL.Database(new Uint8Array(buffer));
