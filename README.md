@@ -99,7 +99,7 @@ All libraries are vendored locally in `libs/` (no runtime CDN dependency). No se
 
 ## Privacy
 
-Your `.mcfx` file **never leaves your device**. All parsing, rendering and export happens in your browser. The only data sent externally is anonymous usage statistics (page views, export settings, book product type) via a self-hosted Matomo instance.
+Your `.mcfx` file **never leaves your device**. All parsing, rendering and export happens in your browser. The only data sent externally is anonymous usage statistics (page views, export settings, book product type, page count) via [Matomo](https://matomo.org/) running on a self-hosted server.
 
 ---
 
