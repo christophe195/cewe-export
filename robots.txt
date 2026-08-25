@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://christophe195.github.io/cewe-export/sitemap.xml

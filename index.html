@@ -3,7 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CEWE MCFX → PDF</title>
+  <title>CEWE MCFX to PDF and JPEG Converter | Free Browser Export Tool</title>
+  <meta name="description" content="Convert CEWE .mcfx photo book files to high-quality PDF or JPEG directly in your browser. Private, local processing with no upload required." />
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="author" content="Christophe Van Dooren" />
+  <meta name="application-name" content="CEWE MCFX Export" />
+  <meta name="theme-color" content="#16213e" />
+  <link rel="canonical" href="https://christophe195.github.io/cewe-export/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="CEWE MCFX Export" />
+  <meta property="og:title" content="CEWE MCFX to PDF and JPEG Converter" />
+  <meta property="og:description" content="Open CEWE .mcfx projects and export them to PDF or JPEG with full local processing in the browser." />
+  <meta property="og:url" content="https://christophe195.github.io/cewe-export/" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="CEWE MCFX to PDF and JPEG Converter" />
+  <meta name="twitter:description" content="Free browser tool to export CEWE .mcfx files to print-ready PDF or JPEG. No upload, local-only processing." />
+  <link rel="manifest" href="site.webmanifest" />
   <link rel="stylesheet" href="style.css" />
 
   <!-- Vendored local libraries (no runtime CDN dependency) -->
@@ -11,8 +27,66 @@
   <script src="libs/pdflib/pdf-lib.min.js"></script>
   <script src="libs/pdfjs/pdf.min.js"></script>
   <script src="libs/jszip/jszip.min.js"></script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "CEWE MCFX Export",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://christophe195.github.io/cewe-export/",
+      "description": "Browser-based converter for CEWE .mcfx photo book files to high-quality PDF and JPEG.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "creator": {
+        "@type": "Person",
+        "name": "Christophe Van Dooren"
+      }
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does this CEWE converter upload my photo book?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. The converter runs fully in your browser and processes your .mcfx file locally on your device."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which export formats are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can export CEWE .mcfx projects as PDF or as JPEG files bundled in a ZIP archive."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I control output quality?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. You can select DPI settings and image quality options for PDF and JPEG exports."
+          }
+        }
+      ]
+    }
+  </script>
 </head>
 <body>
+
+  <noscript>
+    <div class="noscript-banner">
+      This tool requires JavaScript to read CEWE .mcfx files and export PDF or JPEG locally in your browser.
+    </div>
+  </noscript>
 
   <header>
     <div>
@@ -44,6 +118,13 @@
       <button class="btn btn-primary" id="upload-btn">Choose file</button>
       <input type="file" id="file-input" accept=".mcfx" />
     </div>
+    <section class="seo-intro" aria-label="About CEWE MCFX export">
+      <h2>Convert CEWE .mcfx files to PDF or JPEG</h2>
+      <p>
+        CEWE project files are processed fully on-device so your photo book data stays private.
+        Choose booklet or page export mode, tune DPI and quality, and download ready-to-print files in minutes.
+      </p>
+    </section>
     <p id="drop-status"></p>
   </div>
 
